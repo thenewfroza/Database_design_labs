@@ -1,0 +1,87 @@
+db.createCollection("users")
+
+db.createCollection("books")
+
+db.createCollection("books_shelfs")
+
+for (let i = 1; i <= 10; i++) {
+    db.Users.insertOne({
+        "_id": i,
+        "Name": "Имя пользователя " + i,
+        "Password": "Пароль" + i,
+        "Loggin": "Логин" + i,
+        "role": "Роль" + i
+    });
+}
+
+
+for (let i = 1; i <= 10; i++) {
+    db.Books.insertOne({
+        "_id": "ID книги " + i,
+        "Description": "Описание " + i,
+        "Language": "Язык " + i,
+        "Year": 2024,
+        "Place_of_electronic_resource": "Место электронного ресурса " + i,
+        "ators_book": [i, i+1],
+        "book_series": [
+            {
+                "_id": i,
+                "book_series_name": "Название серии книг " + i
+            }
+        ],
+        "key_words": [
+            {
+                "_id": i,
+                "name": "Ключевое слово " + i
+            }
+        ],
+        "Collections": [
+            {
+                "_id": i,
+                "Collections_name": "Название коллекции " + i
+            }
+        ]
+    });
+}
+
+
+for (let i = 1; i <= 10; i++) {
+    db.BookShelfs.insertOne({
+        "_id": i,
+        "bookshelfs_name": "Название полки " + i,
+        "user_id": i,
+        "bookShelfs_book": ["ID книги " + i, "ID книги " + (i+1)]
+    });
+}
+
+db.Books.createIndex({ "Language": 1, "Year": 1 });
+
+db.createView(
+    "UserBooksView", // Название представления
+    "Users", // Исходная коллекция
+    [ // Пайплайн агрегации
+        {
+            $lookup: {
+                from: "Books",
+                localField: "_id",
+                foreignField: "ators_book",
+                as: "user_books"
+            }
+        },
+        {
+            $project: {
+                "Name": 1,
+                "Loggin": 1,
+                "role": 1,
+                "user_books": {
+                    "Description": 1,
+                    "Language": 1,
+                    "Year": 1,
+                    "Place_of_electronic_resource": 1
+                }
+            }
+        }
+    ]
+);
+
+db.UserBooksView.find();
